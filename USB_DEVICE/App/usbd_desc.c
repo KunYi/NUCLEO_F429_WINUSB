@@ -124,7 +124,11 @@ uint8_t * USBD_FS_InterfaceStrDescriptor(USBD_SpeedTypeDef speed, uint16_t *leng
 #if (USBD_LPM_ENABLED == 1)
 uint8_t * USBD_FS_USR_BOSDescriptor(USBD_SpeedTypeDef speed, uint16_t *length);
 #endif /* (USBD_LPM_ENABLED == 1) */
-
+#if (USBD_SUPPORT_WINUSB==1)
+uint8_t *USBD_WinUSBOSStrDescriptor(uint16_t *length);
+uint8_t *USBD_WinUSBOSFeatureDescriptor(uint16_t *length);
+uint8_t *USBD_WinUSBOSPropertyDescriptor(uint16_t *length);
+#endif // (USBD_SUPPORT_WINUSB==1)
 /**
   * @}
   */
@@ -146,6 +150,10 @@ USBD_DescriptorsTypeDef FS_Desc =
 #if (USBD_LPM_ENABLED == 1)
 , USBD_FS_USR_BOSDescriptor
 #endif /* (USBD_LPM_ENABLED == 1) */
+#if (USBD_SUPPORT_WINUSB == 1)
+, USBD_WinUSBOSFeatureDescriptor
+, USBD_WinUSBOSPropertyDescriptor
+#endif // (USBD_SUPPORT_WINUSB==1)
 };
 
 #if defined ( __ICCARM__ ) /* IAR Compiler */
@@ -164,8 +172,8 @@ __ALIGN_BEGIN uint8_t USBD_FS_DeviceDesc[USB_LEN_DEV_DESC] __ALIGN_END =
   0x00,                       /*bcdUSB */
 #endif /* (USBD_LPM_ENABLED == 1) */
   0x02,
-  0x02,                       /*bDeviceClass*/
-  0x02,                       /*bDeviceSubClass*/
+  0x00,                       /*bDeviceClass*/
+  0x00,                       /*bDeviceSubClass*/
   0x00,                       /*bDeviceProtocol*/
   USB_MAX_EP0_SIZE,           /*bMaxPacketSize*/
   LOBYTE(USBD_VID),           /*idVendor*/
@@ -204,6 +212,104 @@ __ALIGN_BEGIN uint8_t USBD_FS_BOSDesc[USB_SIZ_BOS_DESC] __ALIGN_END =
 };
 #endif /* (USBD_LPM_ENABLED == 1) */
 
+#if (USBD_SUPPORT_WINUSB == 1)
+#define USB_LEN_OS_FEATURE_DESC 0x28
+#if defined ( __ICCARM__ ) /* IAR Compiler */
+  #pragma data_alignment=4
+#endif /* defined ( __ICCARM__ ) */
+
+__ALIGN_BEGIN uint8_t USBD_WINUSB_OSFeatureDesc[USB_LEN_OS_FEATURE_DESC] __ALIGN_END =
+{
+  0x28, 0x00, 0x00, 0x00, // length
+  0x00, 0x01,             // bcd version 1.0
+  0x04, 0x00,             // windex: extended compat ID descritor
+  0x01,                   // no of function
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, // reserve 7 bytes
+  // function
+  0x00,             // interface no
+  0x00,             // reserved
+  'W', 'I', 'N', 'U', 'S', 'B', 0x00, 0x00, //  first ID
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,  // second ID
+  0x00, 0x00, 0x00, 0x00, 0x00, 0x00 // reserved 6 bytes
+};
+#define USB_LEN_OS_PROPERTY_DESC 0x8E
+#if defined ( __ICCARM__ ) /* IAR Compiler */
+  #pragma data_alignment=4
+#endif /* defined ( __ICCARM__ ) */
+__ALIGN_BEGIN uint8_t USBD_WINUSB_OSPropertyDesc[USB_LEN_OS_PROPERTY_DESC] __ALIGN_END =
+{
+  0x8E, 0x00, 0x00, 0x00,  // length 246 byte
+  0x00, 0x01,   // BCD version 1.0
+  0x05, 0x00,   // Extended Property Descriptor Index(5)
+  0x01, 0x00,   // number of section (1)
+  // property section
+  0x84, 0x00, 0x00, 0x00,   // size of property section
+  0x01, 0x00, 0x00, 0x00,   // property data type (1)
+  0x28, 0x00,        //; property name length (42)
+   'D', 0x00,
+   'e', 0x00,
+   'v', 0x00,
+   'i', 0x00,
+   'c', 0x00,
+   'e', 0x00,
+   'I', 0x00,
+   'n', 0x00,
+   't', 0x00,
+   'e', 0x00,
+   'r', 0x00,
+   'f', 0x00,
+   'a', 0x00,
+   'c', 0x00,
+   'e', 0x00,
+   'G', 0x00,
+   'U', 0x00,
+   'I', 0x00,
+   'D', 0x00,
+  0x00,0x00,
+  // 8ac9af51-6ba2-4158-90e8-a7bdf93d4c99
+  0x4E, 0x00, 0x00, 0x00,  // property data length
+   '{', 0x00,
+   '8', 0x00,
+   'a', 0x00,
+   'c', 0x00,
+   '9', 0x00,
+   'a', 0x00,
+   'f', 0x00,
+   '5', 0x00,
+   '1', 0x00,
+   '-', 0x00,
+   '6', 0x00,
+   'b', 0x00,
+   'a', 0x00,
+   '2', 0x00,
+   '-', 0x00,
+   '4', 0x00,
+   '1', 0x00,
+   '5', 0x00,
+   '8', 0x00,
+   '-', 0x00,
+   '9', 0x00,
+   '0', 0x00,
+   'e', 0x00,
+   '8', 0x00,
+   '-', 0x00,
+   'a', 0x00,
+   '7', 0x00,
+   'b', 0x00,
+   'd', 0x00,
+   'f', 0x00,
+   '9', 0x00,
+   '3', 0x00,
+   'd', 0x00,
+   '4', 0x00,
+   'c', 0x00,
+   '9', 0x00,
+   '9', 0x00,
+   '}', 0x00,
+  0x00, 0x00,
+};
+
+#endif // (USBD_SUPPORT_WINUSB==1)
 /**
   * @}
   */
@@ -429,15 +535,60 @@ static void IntToUnicode(uint32_t value, uint8_t * pbuf, uint8_t len)
     pbuf[2 * idx + 1] = 0;
   }
 }
+
+#if (USBD_SUPPORT_WINUSB==1)
+
+const uint8_t USBD_OS_STRING[8] = {
+  'M',
+  'S',
+  'F',
+  'T',
+  '1',
+  '0',
+  '0',
+  USB_REQ_MS_VENDOR_CODE,
+};
+
+#if 0
+#define USB_LEN_OS_STRING (0x12U)
+#if defined ( __ICCARM__ ) /* IAR Compiler */
+  #pragma data_alignment=4
+#endif /* defined ( __ICCARM__ ) */
+ __ALIGN_BEGIN uint8_t OS_StringDescritpor[USB_LEN_OS_STRING] __ALIGN_END = {
+  0x12,  0x03,
+   'M',  0x00,
+   'S',  0x00,
+   'F',  0x00,
+   'T',  0x00,
+   '1',  0x00,
+   '0',  0x00,
+   '0',  0x00,
+  USB_REQ_MS_VENDOR_CODE,  0x00
+};
+#endif
+
+uint8_t *USBD_WinUSBOSStrDescriptor(uint16_t *length)
+{
+  USBD_GetString((uint8_t *)USBD_OS_STRING, USBD_StrDesc, length);
+  return USBD_StrDesc;
+  /*
+   *length = USB_LEN_OS_STRING;
+   return OS_StringDescritpor;
+   */
+}
+
+uint8_t *USBD_WinUSBOSFeatureDescriptor(uint16_t *length)
+{
+  *length = USB_LEN_OS_FEATURE_DESC;
+  return USBD_WINUSB_OSFeatureDesc;
+}
+
+uint8_t *USBD_WinUSBOSPropertyDescriptor(uint16_t *length)
+{
+  *length = USB_LEN_OS_PROPERTY_DESC;
+   return USBD_WINUSB_OSPropertyDesc;
+}
+#endif // (USBD_SUPPORT_WINUSB==1)
 /**
   * @}
   */
-
-/**
-  * @}
-  */
-
-/**
-  * @}
-  */
-

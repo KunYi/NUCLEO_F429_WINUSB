@@ -17,6 +17,7 @@
   */
 
 /* Includes ------------------------------------------------------------------*/
+#include "usbd_conf.h"
 #include "usbd_ctlreq.h"
 #include "usbd_ioreq.h"
 
@@ -82,6 +83,10 @@ static void USBD_SetFeature(USBD_HandleTypeDef *pdev, USBD_SetupReqTypedef *req)
 static void USBD_ClrFeature(USBD_HandleTypeDef *pdev, USBD_SetupReqTypedef *req);
 static uint8_t USBD_GetLen(uint8_t *buf);
 
+#if (USBD_SUPPORT_WINUSB==1)
+static void USBD_WinUSBGetDescriptor(USBD_HandleTypeDef *pdev, USBD_SetupReqTypedef *req);
+#endif // (USBD_SUPPORT_WINUSB==1)
+
 /**
   * @}
   */
@@ -102,6 +107,14 @@ static uint8_t USBD_GetLen(uint8_t *buf);
 USBD_StatusTypeDef USBD_StdDevReq(USBD_HandleTypeDef *pdev, USBD_SetupReqTypedef *req)
 {
   USBD_StatusTypeDef ret = USBD_OK;
+
+#if (USBD_SUPPORT_WINUSB==1)
+  if (req->bRequest == USB_REQ_MS_VENDOR_CODE)
+  {
+    USBD_WinUSBGetDescriptor(pdev, req);
+    return ret;
+  }
+#endif // (USBD_SUPPORT_WINUSB==1)
 
   switch (req->bmRequest & USB_REQ_TYPE_MASK)
   {
@@ -166,6 +179,12 @@ USBD_StatusTypeDef USBD_StdItfReq(USBD_HandleTypeDef *pdev, USBD_SetupReqTypedef
 {
   USBD_StatusTypeDef ret = USBD_OK;
   uint8_t idx;
+#if (USBD_SUPPORT_WINUSB==1)
+  if ( req->bmRequest == 0xC1 ) {
+    USBD_WinUSBGetDescriptor( pdev, req );
+    return ret;
+  }
+#endif // (USBD_SUPPORT_WINUSB==1)
 
   switch (req->bmRequest & USB_REQ_TYPE_MASK)
   {
@@ -553,6 +572,25 @@ static void USBD_GetDescriptor(USBD_HandleTypeDef *pdev, USBD_SetupReqTypedef *r
             err++;
           }
           break;
+#if (USBD_SUPPORT_WINUSB==1)
+        case USBD_IDX_WINUSB_STR: // OS String
+            for (uint32_t idx = 0U; (idx < pdev->NumClasses); idx++)
+            {
+              if (pdev->pClass[idx]->GetWinUSBOSDescriptor != NULL)
+              {
+                pbuf = pdev->pClass[idx]->GetWinUSBOSDescriptor(&len);
+                if (pbuf == NULL) /* This means that no class recognized the string index */
+                {
+                    continue;
+                }
+                else
+                {
+                  break;
+                }
+              }
+            }
+            break;
+#endif // (USBD_SUPPORT_WINUSB==1)
 
         default:
 #if (USBD_SUPPORT_USER_STRING_DESC == 1U)
@@ -1039,13 +1077,43 @@ static uint8_t USBD_GetLen(uint8_t *buf)
   * @}
   */
 
-
+#if (USBD_SUPPORT_WINUSB==1)
 /**
   * @}
   */
 
+static void USBD_WinUSBGetDescriptor(USBD_HandleTypeDef *pdev, USBD_SetupReqTypedef *req)
+{
+  uint16_t len;
+  uint8_t *pbuf;
 
-/**
-  * @}
-  */
+
+  switch (req->wIndex)
+  {
+  case 0x04: // compat ID
+    pbuf = pdev->pDesc->GetWinUSBOSFeatureDescriptor(&len);
+    break;
+  case 0x05:
+    pbuf = pdev->pDesc->GetWinUSBOSPropertyDescriptor(&len);
+    break;
+
+  default:
+     USBD_CtlError(pdev , req);
+    return;
+  }
+
+  if((len != 0)&& (req->wLength != 0))
+  {
+
+    len = MIN(len , req->wLength);
+
+    USBD_CtlSendData (pdev,
+                      pbuf,
+                      len);
+  }
+
+
+}
+
+#endif // (USBD_SUPPORT_WINUSB==1)
 

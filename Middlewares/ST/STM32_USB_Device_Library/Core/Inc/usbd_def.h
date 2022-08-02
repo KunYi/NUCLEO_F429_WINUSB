@@ -105,6 +105,7 @@ extern "C" {
 #define  USBD_IDX_SERIAL_STR                            0x03U
 #define  USBD_IDX_CONFIG_STR                            0x04U
 #define  USBD_IDX_INTERFACE_STR                         0x05U
+#define  USBD_IDX_WINUSB_STR							0xEEU
 
 #define  USB_REQ_TYPE_STANDARD                          0x00U
 #define  USB_REQ_TYPE_CLASS                             0x20U
@@ -127,6 +128,8 @@ extern "C" {
 #define  USB_REQ_GET_INTERFACE                          0x0AU
 #define  USB_REQ_SET_INTERFACE                          0x0BU
 #define  USB_REQ_SYNCH_FRAME                            0x0CU
+/* vendor request defined */
+#define  USB_REQ_MS_VENDOR_CODE                         0xA1U
 
 #define  USB_DESC_TYPE_DEVICE                           0x01U
 #define  USB_DESC_TYPE_CONFIGURATION                    0x02U
@@ -264,6 +267,9 @@ typedef struct _Device_cb
 #if (USBD_SUPPORT_USER_STRING_DESC == 1U)
   uint8_t  *(*GetUsrStrDescriptor)(struct _USBD_HandleTypeDef *pdev, uint8_t index,  uint16_t *length);
 #endif /* USBD_SUPPORT_USER_STRING_DESC  */
+#if (USBD_SUPPORT_WINUSB == 1)
+  uint8_t  *(*GetWinUSBOSDescriptor)(uint16_t *length);
+#endif
 
 } USBD_ClassTypeDef;
 
@@ -300,6 +306,10 @@ typedef struct
 #if ((USBD_LPM_ENABLED == 1U) || (USBD_CLASS_BOS_ENABLED == 1))
   uint8_t *(*GetBOSDescriptor)(USBD_SpeedTypeDef speed, uint16_t *length);
 #endif /* (USBD_LPM_ENABLED == 1U) || (USBD_CLASS_BOS_ENABLED == 1) */
+#if (USBD_SUPPORT_WINUSB==1)
+  uint8_t *(*GetWinUSBOSFeatureDescriptor)(uint16_t *length);
+  uint8_t *(*GetWinUSBOSPropertyDescriptor)(uint16_t *length);
+#endif
 } USBD_DescriptorsTypeDef;
 
 /* USB Device handle structure */
