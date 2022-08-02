@@ -23,7 +23,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
-
+#include "usbd_cdc_if.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -51,7 +51,9 @@ ETH_HandleTypeDef heth;
 UART_HandleTypeDef huart3;
 
 /* USER CODE BEGIN PV */
-
+uint8_t RxData[128], TxData[128];
+volatile uint32_t data_received, data_sent;
+volatile int8_t data_out_flag = 0;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -110,6 +112,18 @@ int main(void)
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
+
+    if ( data_out_flag ) {
+       extern int8_t CDC_is_busy(void);
+       HAL_GPIO_TogglePin( LD3_GPIO_Port, LD3_Pin);
+       if ( CDC_is_busy()) continue;
+       data_out_flag = 0;
+       data_sent = data_received;
+       memmove( TxData, RxData, data_received );
+       data_received = 0;
+       CDC_Transmit_FS( TxData, data_sent );
+    }
+
   }
   /* USER CODE END 3 */
 }
