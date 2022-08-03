@@ -76,6 +76,8 @@
 #define USBD_SELF_POWERED     1U
 /*---------- -----------*/
 #define USBD_SUPPORT_WINUSB    1U
+/*----------------------*/
+#define USBLOG_ENABLED        0U
 
 /****************************************/
 /* #define for FS and HS identification */

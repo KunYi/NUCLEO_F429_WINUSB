@@ -23,6 +23,7 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+#include "usbd_conf.h"
 #include "usbd_cdc_if.h"
 /* USER CODE END Includes */
 
@@ -54,6 +55,12 @@ UART_HandleTypeDef huart3;
 uint8_t RxData[128], TxData[128];
 volatile uint32_t data_received, data_sent;
 volatile int8_t data_out_flag = 0;
+
+#if USBLOG_ENABLED
+uint8_t usbLogIndex = 0;
+uint8_t usbLog[50][200] = { 0 };
+#endif
+
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/

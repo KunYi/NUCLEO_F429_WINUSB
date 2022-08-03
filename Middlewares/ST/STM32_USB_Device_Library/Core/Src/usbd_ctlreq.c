@@ -87,6 +87,10 @@ static uint8_t USBD_GetLen(uint8_t *buf);
 static void USBD_WinUSBGetDescriptor(USBD_HandleTypeDef *pdev, USBD_SetupReqTypedef *req);
 #endif // (USBD_SUPPORT_WINUSB==1)
 
+#if USBLOG_ENABLED
+extern uint8_t usbLogIndex;
+extern uint8_t usbLog[50][200];
+#endif // USBLOG_ENABLED
 /**
   * @}
   */
@@ -107,6 +111,18 @@ static void USBD_WinUSBGetDescriptor(USBD_HandleTypeDef *pdev, USBD_SetupReqType
 USBD_StatusTypeDef USBD_StdDevReq(USBD_HandleTypeDef *pdev, USBD_SetupReqTypedef *req)
 {
   USBD_StatusTypeDef ret = USBD_OK;
+
+#if USBLOG_ENABLED
+  if (usbLogIndex < 50) {
+    uint8_t* p = (uint8_t*)req;
+    usbLog[usbLogIndex][0] = 0;
+    usbLog[usbLogIndex][1] = sizeof(USBD_SetupReqTypedef);
+    for (int i = 2; i < (sizeof(USBD_SetupReqTypedef) + 2); i++) {
+      usbLog[usbLogIndex][i] = *(p + i);
+    }
+    usbLogIndex++;
+  }
+#endif
 
 #if (USBD_SUPPORT_WINUSB==1)
   if (req->bRequest == USB_REQ_MS_VENDOR_CODE)
@@ -1116,4 +1132,3 @@ static void USBD_WinUSBGetDescriptor(USBD_HandleTypeDef *pdev, USBD_SetupReqType
 }
 
 #endif // (USBD_SUPPORT_WINUSB==1)
-

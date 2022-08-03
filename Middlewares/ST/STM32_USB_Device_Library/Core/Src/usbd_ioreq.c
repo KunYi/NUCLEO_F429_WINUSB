@@ -61,7 +61,10 @@
 /**
   * @}
   */
-
+#if USBLOG_ENABLED
+extern uint8_t usbLogIndex;
+extern uint8_t usbLog[50][200];
+#endif // USBLOG_ENABLED
 
 /** @defgroup USBD_IOREQ_Private_FunctionPrototypes
   * @{
@@ -98,6 +101,20 @@ USBD_StatusTypeDef USBD_CtlSendData(USBD_HandleTypeDef *pdev,
 
   /* Start the transfer */
   (void)USBD_LL_Transmit(pdev, 0x00U, pbuf, len);
+
+#if USBLOG_ENABLED
+  if (usbLogIndex < 50) {
+    usbLog[usbLogIndex][0] = 1;
+    usbLog[usbLogIndex][1] = len;
+    len += 2;
+    if (len > 199)
+      len = 199;
+      for (int i = 2; i < len; i++) {
+        usbLog[usbLogIndex][i] = *(pbuf + i);
+    }
+    usbLogIndex++;
+  }
+#endif // USBLOG_ENABLED
 
   return USBD_OK;
 }
